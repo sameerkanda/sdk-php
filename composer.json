@@ -14,9 +14,8 @@
   "require": {
     "php": ">=5.5.0",
     "symfony/symfony": "2.7.*",
-    "league/oauth2-client": "^1.0",
-    "league/oauth1-client": "~1.0",
-    "sensio/buzz-bundle": "dev-master"
+    "sensio/buzz-bundle": "dev-master",
+    "guzzlehttp/guzzle": "^6.2"
   },
   "scripts": {
     "post-install-cmd": [

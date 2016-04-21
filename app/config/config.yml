@@ -1,9 +1,13 @@
 parameters:
-    connection: live #sandbox or live type of connection
+    connection: sandbox #sandbox or live type of connection
     show_errors: true
     report_assets: assets
     storage_path: storage
     proxy_path: proxy
+    connectors_api:
+        host: 192.168.10.14
+        version: v1
+
 
 sensio_buzz:
     client_timeout: 180

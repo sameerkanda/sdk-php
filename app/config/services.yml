@@ -4,7 +4,7 @@ services:
         arguments: ["@buzz.client", "@buzz.message_factory"]
     connector_service:
         class: RG\ConnectorService
-        arguments: [%connectors%, @browser, @proxy_service, %connection%, %responses%]
+        arguments: ["%connectors%", "@api", "@proxy_service", "%connection%", "%responses%"]
     report_service:
         class: RG\ReportService
         arguments: [@service_container]
@@ -29,3 +29,12 @@ services:
         class: RAM\Services\SpellingService
     logger:
         class: RAM\Services\Logger
+
+
+    # New services
+    http_client:
+        class: GuzzleHttp\Client
+
+    api:
+        class: RG\Api
+        arguments: ["@http_client", "%connectors_api%"]

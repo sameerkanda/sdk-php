@@ -5,6 +5,7 @@
  */
 
 namespace RG;
+use RG\Exception\ApiException;
 use Sensio\Bundle\BuzzBundle\SensioBuzzBundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
@@ -96,10 +97,14 @@ class Kernel
      */
     public function handle(Request $request)
     {
-        $reportService = $this->container->get('report_service');
-        $reportService->warmupReport();
-        $report = $reportService->getReport();
-        $response = new Response($report->run());
+        try {
+            $reportService = $this->container->get('report_service');
+            $reportService->warmupReport();
+            $report = $reportService->getReport();
+            $response = new Response($report->run());
+        } catch (ApiException $ex) {
+            $response = new Response("<h1>{$ex->getMessage()}</h1><h2>Code: {$ex->getCode()}</h2>");
+        }
 
         return $response;
     }

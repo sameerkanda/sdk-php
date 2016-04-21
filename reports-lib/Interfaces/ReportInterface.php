@@ -4,9 +4,8 @@
  * This file is part of Rocketgraph service
  * <http://www.rocketgraph.com>.
  */
-namespace RG\Interfaces;
+namespace RAM\Interfaces;
 
-use RG\ReportConnector;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -34,8 +33,10 @@ interface ReportInterface
 
     /**
      * Get report's specific connector based on provider name
+     * 
      * @param string $provider
-     * @return ReportConnector|null
+     * 
+     * @return ConnectorInterface
      */
     public function getConnector($provider);
 }

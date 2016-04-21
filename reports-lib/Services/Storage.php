@@ -5,7 +5,7 @@
  */
 
 namespace RAM\Services;
-use RG\Interfaces\StorageInterface;
+use RAM\Interfaces\StorageInterface;
 
 /**
  * Description of Storage

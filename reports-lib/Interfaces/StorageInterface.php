@@ -4,7 +4,7 @@
  * <http://www.rocketgraph.com>
  */
 
-namespace RG\Interfaces;
+namespace RAM\Interfaces;
 
 /**
  * Description of StorageInterface

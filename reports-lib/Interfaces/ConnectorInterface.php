@@ -5,9 +5,7 @@
  * <http://www.rocketgraph.com>.
  */
 
-namespace RG\Interfaces;
-use RG\Connection;
-use Symfony\Component\HttpFoundation\Request;
+namespace RAM\Interfaces;
 
 /**
  * Description of ConnectorInterface.
@@ -16,6 +14,17 @@ use Symfony\Component\HttpFoundation\Request;
  */
 interface ConnectorInterface
 {
+    /**
+     * ConnectorInterface constructor.
+     * 
+     * @param string $provider
+     * @param ProviderInterface $providerService
+     * @param array $credentials
+     */
+    public function __construct($provider, ProviderInterface $providerService,
+                                array $credentials = []
+    );
+    
     /**
      * Get an API call response from path.
      *
@@ -51,46 +60,9 @@ interface ConnectorInterface
                         $force = false);
 
     /**
-     * Build absolute URL from path.
-     *
-     * @param $path
-     *
-     * @return string
+     * Get last call response headers
+     * 
+     * @return array
      */
-    public function buildUrlFromPath($path);
-
-    /**
-     * Connect to Provider.
-     */
-    public function setupProvider();
-
-    /**
-     * Build connector token, based on subscription's connection
-     *
-     * @param Connection $connection
-     */
-    public function buildToken(Connection $connection);
-
-    /**
-     * Returns the display name of connection
-     *
-     * @return string
-     */
-    public function getDisplayName();
-
-    /**
-     * Returns if connector needs extra parameters
-     *
-     * @return bool
-     */
-    public function needsExtraParameters();
-
-    /**
-     * Returns if a request is a proper API OAuth callback
-     *
-     * @param Request $request
-     *
-     * @return bool
-     */
-    public function isResponse(Request $request);
+    public function getLastHeaders();
 }

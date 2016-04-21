@@ -4,16 +4,15 @@
  * <http://www.rocketgraph.com>
  */
 
-namespace RAM\Connectors\Mock;
-use RAM\Connectors\WeiboConnector;
+namespace RAM\Connectors;
 use RG\Traits\MockConnectorTrait;
 
 /**
- * Description of WeiboMockConnector
+ * Description of MockRemoteConnector
  *
  * @author K.Christofilos <kostas.christofilos@rocketgraph.com>
  */
-class WeiboMockConnector extends WeiboConnector
+class MockRemoteConnector extends RemoteConnector
 {
     use MockConnectorTrait;
 }
