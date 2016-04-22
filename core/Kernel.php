@@ -71,7 +71,9 @@ class Kernel
 
         $connectors = Yaml::parse($this->configPath.'/connectors.yml');
 
-        $this->container->setParameter('connectors', $connectors['connectors']);
+        if (isset($connectors['connectors'])) {
+            $this->container->setParameter('connectors', $connectors['connectors']);
+        }
 
         /* Load services */
         $loader->load('services.yml');
