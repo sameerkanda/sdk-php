@@ -10,7 +10,7 @@ use RAM\Exception\ConnectorNotFoundException;
 use RAM\Interfaces\ProviderInterface;
 use RG\Exception\ApiException;
 use GuzzleHttp\Exception\RequestException;
-use RG\Traits\ConnectorTrait;
+use RG\Traits\MockConnectorTrait;
 
 /**
  * Description of Api
@@ -40,19 +40,34 @@ class Api implements ProviderInterface
     }
 
     /**
+     * Get list of available providers
+     * 
+     * @return array
+     */
+    public function getAvailableProviders()
+    {
+        return $this->getFromApi('available_connectors', [], true);
+    }
+    
+    /**
+     * Get specific provider
+     * 
      * @param string $provider
      *
      * @return mixed
      */
     public function getProvider($provider)
     {
-        $availableProviders = $this->getFromApi('available_connectors');
+        $availableProviders = $this->getAvailableProviders();
 
-        if (!isset($availableProviders->{$provider})) {
+        if (!isset($availableProviders[$provider])) {
             throw new ConnectorNotFoundException($provider);
         }
 
-        return $availableProviders->{$provider};
+        $connector = $availableProviders[$provider];
+        $connector['provider'] = $provider;
+        
+        return $connector;
     }
 
     /**
@@ -61,23 +76,15 @@ class Api implements ProviderInterface
      * @param string $provider
      * @param string $path
      * @param array $options
-     * @param array $credentials
      *
      * @return mixed
      */
-    public function get($provider, $path, array $options = [], array $headers = [], 
-                        array $credentials = []
+    public function request($provider, $path, array $options = []
     )
     {
-        $options = [
-            'path' => $path,
-            'options' => $options,
-            'headers' => $headers
-        ];
+        $path = MockConnectorTrait::sanitizePath($path);
 
-        $options = array_merge($options, $credentials);
-
-        return $this->getFromApi("connector/$provider/get", $options);
+        return $this->getFromApi("connector/$provider/$path", $options);
     }
 
     /**
@@ -113,12 +120,12 @@ class Api implements ProviderInterface
      * 
      * @return mixed
      */
-    protected function getFromApi($path, array $options = [])
+    protected function getFromApi($path, array $options = [], $array = false)
     {
-        ltrim($path, "/\t\n\r\0\x0B");
+        $path = MockConnectorTrait::sanitizePath($path);
         $baseUrl = "$this->api/$path";
 
-        $url = ConnectorTrait::bindUrlOptions($baseUrl, $options);
+        $url = MockConnectorTrait::bindUrlOptions($baseUrl, $options);
 
         try {
             $response = $this->client->get($url);
@@ -132,6 +139,9 @@ class Api implements ProviderInterface
             throw new ApiException($url, $content->errors->message, $content->errors->code);
         }
 
+        if ($array) {
+            return json_decode(json_encode($content->data), true);
+        }
         return $content->data;
     }
 }

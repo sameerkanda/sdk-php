@@ -18,10 +18,11 @@ interface ConnectorInterface
      * ConnectorInterface constructor.
      * 
      * @param string $provider
+     * @param string $oauthType
      * @param ProviderInterface $providerService
      * @param array $credentials
      */
-    public function __construct($provider, ProviderInterface $providerService,
+    public function __construct($provider, $oauthType, ProviderInterface $providerService,
                                 array $credentials = []
     );
     
@@ -65,4 +66,13 @@ interface ConnectorInterface
      * @return array
      */
     public function getLastHeaders();
+
+    /**
+     * Get oauth type {"oauth1"|"oauth2"}
+     * 
+     * @return string
+     */
+    public function getOauthType();
+    
+    public function __toString();
 }

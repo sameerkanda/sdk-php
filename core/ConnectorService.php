@@ -38,53 +38,36 @@ class ConnectorService
         }
     }
 
+    /**
+     * @return string
+     */
+    public function getConnection()
+    {
+        return $this->connection;
+    }
+
+    /**
+     * @param string $connection
+     * 
+     * @return ConnectorService
+     */
+    public function setConnection($connection)
+    {
+        $this->connection = $connection;
+        
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
     public function getAvailableConnectors()
     {
-        $connectors =  [
-            'twitter' => 'Twitter',
-            'facebook' => 'Facebook',
-            'facebookpage' => 'Facebook Page',
-            'stripe' => 'Stripe',
-            'dribbble' => 'Dribbble',
-            'soundcloud' => 'Soundlcoud',
-            'google' => 'Google+',
-            'youtubedata' => 'Youtube Data',
-            'youtubeanalytics' => 'Youtube Analytics',
-            'quickbooks' => 'Quickbooks',
-            'fitbit' => 'Fitbit',
-            'github' => 'Github',
-            'fivehundredpx' => '500px',
-            'angellist' => 'AngelList',
-            'behance' => 'Behance',
-            'box' => 'Box',
-            'dropbox' => 'Dropbox',
-            'etsy' => 'Etsy',
-            'flickr' => 'Flickr',
-            'foursquare' => 'Foursquare',
-            'freshbooks' => 'FreshBooks',
-            'gmail' => 'Gmail',
-            'googleanalytics' => 'Google Analytics',
-            'instagram' => 'Instagram',
-            'pinterest' => 'Pinterest',
-            'spotify' => 'Spotify',
-            'linkedin' => 'LinkedIn',
-            'paypal' => 'Paypal',
-            'slack' => 'Slack',
-            'square' => 'Square',
-            'trello' => 'Trello',
-            'tumblr' => 'Tumblr',
-            'twitch' => 'Twitch',
-            'vimeo' => 'Vimeo',
-            'jawbone' => 'Jawbone',
-            'vk' => 'VK',
-            'weibo' => 'Weibo',
-            'meetup' => 'Meetup',
-            'misfit' => 'Misfit',
-            'withings' => 'Withings',
-            'powerbi' => 'Power BI'
-        ];
+        $connectors = $this->service->getAvailableProviders();
 
-        asort($connectors, SORT_STRING);
+        uasort($connectors, function($e1, $e2) {
+            return $e1['name'] > $e2['name'];
+        });
 
         return $connectors;
     }
@@ -102,7 +85,7 @@ class ConnectorService
      */
     public function buildOpenConnector()
     {
-        return $this->buildConnector('open', []);
+        return $this->buildConnector('open');
     }
 
     /**
@@ -111,20 +94,43 @@ class ConnectorService
      *
      * @return ConnectorInterface
      */
-    protected function buildConnector($provider, array $params = [])
+    public function buildConnector($provider, array $params = [])
     {
+        $connector = $this->service->getProvider($provider);
         if ($this->connection === 'sandbox') {
-            $connector = new MockRemoteConnector($provider, $this->service, $params);
+            $connector = new MockRemoteConnector($connector['provider'], $connector['oauth'], $this->service, $params);
             if (!isset($this->responses[$provider])) {
                 throw new \RuntimeException("You requested sandbox environment for '$provider' connector, but you haven't defined any responses in app/config/responses.yml");
             }
             $connector->setResponses($this->responses[$provider]);
         } else if ($this->connection === 'live') {
-            $connector = new RemoteConnector($provider, $this->service, $params);
+            $connector = new RemoteConnector($connector['provider'], $connector['oauth'], $this->service, $params);
         } else {
             throw new \RuntimeException("No valid connection type was found. Valid types are 'sandbox' or 'live'");
         }
-        
+
         return $connector;
+    }
+
+    /**
+     * @param ConnectorInterface $connector
+     * @param array $params
+     *
+     * @return mixed
+     */
+    public function requestToken(ConnectorInterface $connector, array $params = [])
+    {
+        return $this->service->request((string)$connector, 'token/request', $params);
+    }
+
+    /**
+     * @param ConnectorInterface $connector
+     * @param array $params
+     * 
+     * @return mixed
+     */
+    public function authorizeToken(ConnectorInterface $connector, array $params = [])
+    {
+        return $this->service->request((string)$connector, 'token/authorize', $params);
     }
 }

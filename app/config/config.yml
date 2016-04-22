@@ -7,7 +7,3 @@ parameters:
     connectors_api:
         host: 192.168.10.14
         version: v1
-
-
-sensio_buzz:
-    client_timeout: 180

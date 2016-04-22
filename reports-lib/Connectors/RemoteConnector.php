@@ -16,21 +16,29 @@ use RAM\Interfaces\ProviderInterface;
  */
 class RemoteConnector implements ConnectorInterface
 {
+    /** @var ProviderInterface */
     protected $service;
-    
+
+    /** @var string */
     protected $provider;
-    
+
+    /** @var array */
     protected $credentials;
 
+    /** @var array */
     protected $lastHeaders = [];
 
-    public function __construct($provider, ProviderInterface $providerService, 
+    /** @var string */
+    protected $oauthType;
+
+    public function __construct($provider, $oauthType, ProviderInterface $providerService, 
                                 array $credentials = []
     )
     {
         $this->service = $providerService;
         $this->provider = $provider;
         $this->credentials = $credentials;
+        $this->oauthType = $oauthType;
         
     }
 
@@ -51,7 +59,15 @@ class RemoteConnector implements ConnectorInterface
                         $array = false, $useProxy = true, $permanent = false,
                         $force = false)
     {
-        $response = $this->service->get($this->provider, $path, $options, $headers, $this->credentials);
+        $options = [
+            'path' => $path,
+            'options' => $options,
+            'headers' => $headers
+        ];
+        
+        $options = array_merge($options, $this->credentials);
+        $response = $this->service->request($this->provider, $path, $options);
+        
         $this->setLastHeaders($response->headers);
 
         return $response->response;
@@ -75,15 +91,39 @@ class RemoteConnector implements ConnectorInterface
                                 $array = false, $useProxy = true, $permanent = false,
                                 $force = false)
     {
-        $response = $this->service->getAbsolute($url, $options, $headers);
+        $options = [
+            'url' => $url,
+            'options' => $options,
+            'headers' => $headers
+        ];
+
+        $options = array_merge($options, $this->credentials);
+        $response = $this->service->request($this->provider, $path, $options);
+        
         $this->setLastHeaders($response->headers);
 
         return $response->response;
     }
 
+    /**
+     * @return array
+     */
     public function getLastHeaders()
     {
         return $this->lastHeaders;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOauthType()
+    {
+        return $this->oauthType;
+    }
+
+    public function __toString()
+    {
+        return $this->provider;
     }
 
     /**

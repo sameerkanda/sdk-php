@@ -18,6 +18,45 @@ trait MockConnectorTrait
     protected $responses;
 
     /**
+     * Sanitize path before passing it to url building
+     *
+     * @param string $path
+     *
+     * @return string
+     */
+    public static function sanitizePath($path)
+    {
+        return ltrim($path, '/ ');
+    }
+
+    /**
+     * Append query to url if any options are defined
+     *
+     * @param string $url
+     * @param array $options
+     *
+     * @return string
+     */
+    public static function bindUrlOptions($url, array $options = [])
+    {
+        $urlParts = parse_url($url);
+        if (isset($urlParts['query'])) {
+            parse_str($urlParts['query'], $existingOptions);
+            foreach($options as $key => $value) {
+                $existingOptions[$key] = $value;
+            }
+            $options = $existingOptions;
+            $url = $urlParts['scheme'].'://'.$urlParts['host'].$urlParts['path'];
+        }
+        $query = http_build_query($options);
+        if ($query !== '') {
+            $url .= "?$query";
+        }
+
+        return $url;
+    }
+
+    /**
      * @param mixed $responses
      *
      * @return MockRemoteConnector
@@ -41,7 +80,7 @@ trait MockConnectorTrait
                         $array = false, $useProxy = true, $permanent = false,
                         $force = false)
     {
-        $path = ConnectorTrait::sanitizePath($path);
+        $path = self::sanitizePath($path);
         $query = http_build_query($options);
         if ($query !== '') {
             $path .= "?$query";
@@ -68,7 +107,7 @@ trait MockConnectorTrait
                                 $array = false, $useProxy = true, $permanent = false,
                                 $force = false)
     {
-        $url = ConnectorTrait::bindUrlOptions($url, $options);
+        $url = self::bindUrlOptions($url, $options);
         if (isset($this->responses[$url])) {
             return $this->responses[$url];
         }

@@ -5,10 +5,9 @@
  */
 
 namespace RG\Command;
+use RAM\Interfaces\ConnectorInterface;
+use RG\ConnectorService;
 use RG\ConsoleCommand;
-use RG\Interfaces\ConnectorInterface;
-use RG\Oauth1Connector;
-use RG\Oauth2Connector;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -18,10 +17,16 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class AuthCommand extends ConsoleCommand
 {
+    /** @var array */
     protected $connectors;
 
+    /** @var ConnectorService */
+    protected $connectorService;
+    
     public function execute()
     {
+        $this->connectorService = $this->container->get('connector_service');
+        $this->connectorService->setConnection('live');
         $this->displayAvailableConnectors();
         $this->getConnector();
         $connector = $this->buildConnector();
@@ -37,11 +42,10 @@ class AuthCommand extends ConsoleCommand
         $this->output('Available Connectors');
         $this->output('--------------------');
 
-        $connectorSerivce = $this->container->get('connector_service');
-        $this->connectors = $connectorSerivce->getAvailableConnectors();
+        $this->connectors = $this->connectorService->getAvailableConnectors();
 
-        foreach ($this->connectors as $key => $name) {
-            $this->output("$key ($name)");
+        foreach ($this->connectors as $key => $connector) {
+            $this->output("$key ({$connector['name']})");
         }
         $this->output();
     }
@@ -65,8 +69,7 @@ class AuthCommand extends ConsoleCommand
      */
     protected function buildConnector()
     {
-        $connectorSerivce = $this->container->get('connector_service');
-        $connector = $connectorSerivce->buildPrimitiveConnector($this->input['connectorName']);
+        $connector = $this->connectorService->buildConnector($this->input['connectorName']);
 
         return $connector;
     }
@@ -80,9 +83,9 @@ class AuthCommand extends ConsoleCommand
     {
         $clientId = $this->readline("Enter Client ID: ");
         $clientSecret = $this->readline("Enter Client Secret: ");
-        $callbackUrl = $this->readline("Enter callback URL: ");
+        $redirectUrl = $this->readline("Enter redirect URL: ");
 
-        if ($connector instanceof Oauth2Connector) {
+        if ($connector->getOauthType() === 'oauth2') {
             $scopes = $this->readline("Enter scopes (optional): ");
             if ($scopes !== '') {
                 $scopes = explode(',', str_replace(' ', '', $scopes));
@@ -91,33 +94,34 @@ class AuthCommand extends ConsoleCommand
             $scopes = [];
         }
 
-        $connector->key = $clientId;
-        $connector->secret = $clientSecret;
-        $connector->callbackUrl = $callbackUrl;
-        $connector->scopes = $scopes;
-        $connector->setupProvider();
+        $params = [
+            'client_key' => $clientId,
+            'client_secret' => $clientSecret,
+            'redirect_url' => $redirectUrl,
+            'scopes' => $scopes
+        ];
 
         try {
-            if ($connector instanceof Oauth1Connector) {
-                $temporaryCredentials = $connector->getTemporaryCredentials();
-                $redirectUrl = $connector->getAuthorizationUrl($temporaryCredentials);
-                $request = $this->getTokenRequest($connector, $redirectUrl);
+            $response = $this->connectorService->requestToken($connector, $params);
+            $token = $response->request_token;
+            $request = $this->getTokenRequest($connector, $token->request_url);
 
-                $credentials = $connector->getTokenCredentials($temporaryCredentials,
-                    $request->get('oauth_token'), $request->get('oauth_verifier'));
+            if ($connector->getOauthType() === 'oauth1') {
+                $params['temp_identifier'] = $token->temp_identifier;
+                $params['temp_secret'] = $token->temp_secret;
+                $params['oauth_token'] = $request->query->get('oauth_token');
+                $params['oauth_verifier'] = $request->query->get('oauth_verifier');
+                $auth = $this->connectorService->authorizeToken($connector, $params);
 
-                $this->output("Your access token is: {$credentials->getIdentifier()}");
-                $this->output("Your access token secret is : {$credentials->getSecret()}");
+                $this->output("Your access token is: {$auth->token->access_token}");
+                $this->output("Your access token secret is : {$auth->token->access_token_secret}");
             } else {
-                $redirectUrl = $connector->getAuthorizationUrl([]);
-                $request = $this->getTokenRequest($connector, $redirectUrl);
+                $params['code'] = $request->query->get('code');
+                $auth = $this->connectorService->authorizeToken($connector, $params);
 
-                $tokenParams = $connector->getDefaultTokenParameters();
-                $tokenParams = array_merge($tokenParams, ['code' => $request->get('code')]);
-                $token = $connector->getAccessToken('authorization_code', $tokenParams);
-
-                $this->output("Your access token is: {$token->getToken()}");
+                $this->output("Your access token is: {$auth->token->access_token}");
             }
+
         } catch (\Exception $ex) {
             $this->output("ERROR: {$ex->getMessage()}");
         }
@@ -139,12 +143,12 @@ class AuthCommand extends ConsoleCommand
      *
      * @return Request
      */
-    protected function getTokenRequest(ConnectorInterface $connector, $redirectUrl)
+    protected function getTokenRequest(ConnectorInterface $connector, $requestUrl)
     {
         $this->output('', 2);
         $this->output("Paste the following URL to your browser.");
         $this->output('', 2);
-        $this->output($redirectUrl);
+        $this->output($requestUrl);
         $this->output('', 2);
         $this->output("Paste the URL that API redirected you below");
         $this->output();
@@ -152,11 +156,26 @@ class AuthCommand extends ConsoleCommand
         do {
             $callbackUrl = $this->readline('Paste URL: ');
             $request = $this->buildRequestFromCallback($callbackUrl);
-            if (!$connector->isResponse($request)) {
+            if (!$this->isProviderResponse($connector, $request)) {
                 $this->output("This is not a valid callback URL");
             }
-        } while (!$connector->isResponse($request));
+        } while (!$this->isProviderResponse($connector, $request));
 
         return $request;
+    }
+
+    /**
+     * @param ConnectorInterface $connector
+     * @param Request $request
+     *
+     * @return bool
+     */
+    protected function isProviderResponse(ConnectorInterface $connector, Request $request)
+    {
+        if ($connector->getOauthType() === 'oauth1') {
+            return $request->query->has('oauth_token') && $request->query->has('oauth_verifier');
+        } else {
+            return $request->query->has('code');
+        }
     }
 }
