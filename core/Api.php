@@ -37,9 +37,6 @@ class Api implements ProviderInterface
         if ($version) {
             $this->api .= "/$version";
         }
-
-        echo $this->api;
-        exit;
     }
 
     /**
@@ -136,6 +133,9 @@ class Api implements ProviderInterface
             $response = $requestException->getResponse();
         }
 
+        if (!$response) {
+            throw new ApiException($url, 'Empty result', 500);
+        }
         $content = json_decode($response->getBody()->getContents());
 
         if (isset($content->errors)) {

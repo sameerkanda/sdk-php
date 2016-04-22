@@ -4,7 +4,7 @@ services:
         arguments: ["%connectors%", "@api", "@proxy_service", "%connection%", "%responses%"]
     report_service:
         class: RG\ReportService
-        arguments: ["@service_container"]
+        arguments: ["@connector_service", "@storage_service", "@event_dispatcher", "@logger", "@report_templating_helper", "%src_path%", "%app_path%"]
     event_dispatcher:
         class: RAM\EventDispatcher\EventDispatcher
         arguments: ["@service_container"]

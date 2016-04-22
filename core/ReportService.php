@@ -5,12 +5,16 @@
  */
 
 namespace RG;
+
 use RAM\BaseReport;
+use RAM\Interfaces\EventDispatcherInterface;
+use RAM\Services\Logger;
 use RAM\Services\Sentiment;
 use RAM\Services\SpellingService;
+use RAM\Services\Storage;
 use RG\Exception\ReportNotFoundException;
 use RG\RenderEngine\RenderEngine;
-use Symfony\Component\DependencyInjection\Container;
+use RG\RenderEngine\ReportTemplatingHelper;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -20,18 +24,62 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class ReportService
 {
+    /** @var ConnectorService */
+    protected $connectorService;
+    
+    /** @var Storage */
+    protected $storage;
+
+    /** @var EventDispatcherInterface */
+    protected $dispatcher;
+    
+    /** @var Logger */
+    protected $logger;
+
+    /** @var ReportTemplatingHelper */
+    protected $templatingHelper;
+    
+    /** @var string */
     protected $srcPath;
 
-    protected $container;
+    /** @var string */
+    protected $appPath;
 
+    /** @var BaseReport */
     protected $report;
 
-    public function __construct(Container $container)
+    /** @var bool */
+    protected $forceCopy;
+
+    public function __construct(ConnectorService $connectorService, Storage $storage, 
+                                EventDispatcherInterface $eventDispatcher, 
+                                Logger $logger, ReportTemplatingHelper $templatingHelper, 
+                                $srcPath, $appPath
+    )
     {
-        $this->srcPath = $container->getParameter('src_path');
-        $this->container = $container;
+        $this->connectorService = $connectorService;
+        $this->storage = $storage;
+        $this->dispatcher = $eventDispatcher;
+        $this->logger = $logger;
+        $this->templatingHelper = $templatingHelper;
+        $this->srcPath = $srcPath;
+        $this->appPath = $appPath;
+
+        $this->forceCopy = strtoupper(substr(PHP_OS, 0, 3)) == 'WIN';
     }
 
+    /**
+     * @param bool $force
+     * 
+     * @return ReportService
+     */
+    public function setForceCopy($force)
+    {
+        $this->forceCopy = (bool)$force;
+        
+        return $this;
+    }
+    
     /**
      * Warmup report before render
      */
@@ -45,13 +93,9 @@ class ReportService
                 if ($this->isValidReport($reportPath)) {
                     include_once $reportPath;
                     $class = $this->getReportClass($reportPath);
-                    $storage = $this->container->get('storage_service');
-                    $this->report = new $class(
-                        $this->container->get('event_dispatcher'),
-                        $storage
-                    );
-                    $logger = $this->container->get('logger');
-                    $logger->setStorage($storage);
+                    $this->report = new $class($this->dispatcher, $this->storage);
+                    $logger = $this->logger;
+                    $logger->setStorage($this->storage);
                     $this->report->setLogger($logger);
                     $this->setTemplateEngine($this->report);
                     $this->linkFolders($class);
@@ -92,11 +136,10 @@ class ReportService
      */
     protected function setupConnectors()
     {
-        $connectorService = $this->container->get('connector_service');
-        $connectors = $connectorService->getConnectors();
+        $connectors = $this->connectorService->getConnectors();
         $this->report->setConnectors($connectors);
 
-        $openConnector = $this->container->get('connector_service')->buildOpenConnector();
+        $openConnector = $this->connectorService->buildOpenConnector();
         $this->report->setOpenConnector($openConnector);
         $this->report->setSentiment(new Sentiment());
         $this->report->setSpelling(new SpellingService());
@@ -140,11 +183,10 @@ class ReportService
         $basePath = $report->getReportPath();
         $templatePaths = [
             $basePath,
-            $this->container->getParameter('app_path').'/resources/views'
+            $this->appPath.'/resources/views'
         ];
         $loader = new \Twig_Loader_Filesystem($templatePaths);
-        $templatingHelper = $this->container->get('report_templating_helper');
-        $engine = new RenderEngine($loader, $report, $templatingHelper);
+        $engine = new RenderEngine($loader, $report, $this->templatingHelper);
         $report->setRenderEngine($engine);
     }
 
@@ -169,7 +211,7 @@ class ReportService
             }
             $symlinkFolder = $assetsFolder.DIRECTORY_SEPARATOR.$className;
 
-            if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+            if ($this->forceCopy) {
                 $this->copyFolder($reportPublic, $symlinkFolder);
             } else {
                 @symlink($reportPublic, $symlinkFolder);
