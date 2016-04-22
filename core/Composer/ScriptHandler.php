@@ -57,6 +57,14 @@ class ScriptHandler
 
         file_put_contents($configYml, Yaml::dump($distConfig, 4));
 
+        $connectorsYml = 'app/config/connectors.yml';
+        $responsesYml = 'app/config/responses.yml';
+        if (!file_exists($connectorsYml)) {
+            file_put_contents($connectorsYml, file_get_contents($connectorsYml.'.dist'));
+        }
+        if (!file_exists($responsesYml)) {
+            file_put_contents($responsesYml, file_get_contents($responsesYml.'.dist'));
+        }
         return;
     }
 
