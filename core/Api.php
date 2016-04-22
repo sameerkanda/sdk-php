@@ -28,15 +28,18 @@ class Api implements ProviderInterface
         $this->client = $client;
         
         /* Setup API */
-        $schema = isset($params['schema']) ? $params['schema'] : 'http';
+        $schema = isset($params['schema']) ? $params['schema'] : 'https';
         $host = $params['host'];
-        $port = isset($params['port']) ? $params['port'] : '80';
+        $port = isset($params['port']) ? ":{$params['port']}" : '';
         $version = isset($params['version']) ? $params['version'] : null;
         
-        $this->api = "$schema://$host:$port";
+        $this->api = "$schema://$host$port";
         if ($version) {
             $this->api .= "/$version";
         }
+
+        echo $this->api;
+        exit;
     }
 
     /**

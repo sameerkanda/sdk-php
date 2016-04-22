@@ -46,13 +46,13 @@ Inside `connectors.yml` file you will define API keys for the required connector
 
 1. [Oauth1][4] API connectors
   
-   For Oauth1 connectors you have to setup `api_key`, `api_secret`, `access_token` and `access_token_secret` fields that you will acquire from your API provider.
+   For Oauth1 connectors you have to setup `client_key`, `client_secret`, `access_token` and `access_token_secret` fields that you will acquire from your API provider.
 
    *`connector.yml` for [Twitter][5]*
 
    ```yaml
    connectors:
-       twitter: {api_key: 1234567890, api_secret: 1234567890, access_token: 1234567890, access_token_secret: 1234567890}
+       twitter: {client_key: 1234567890, client_secret: 1234567890, access_token: 1234567890, access_token_secret: 1234567890}
    ```
 
 2. [Oauth2][6] API connectors
@@ -72,7 +72,7 @@ Inside `connectors.yml` file you will define API keys for the required connector
 
    ```yaml
    connectors:
-       twitter: {api_key: 1234567890, api_secret: 1234567890, access_token: 1234567890, access_token_secret: 1234567890} 
+       twitter: {client_key: 1234567890, client_secret: 1234567890, access_token: 1234567890, access_token_secret: 1234567890} 
        facebook: {access_token: 1234567890} 
    ```
 

@@ -1,4 +1,5 @@
 /vendor/
+/app/config/config.yml
 /app/config/connectors.yml
 /app/config/responses.yml
 /src/*

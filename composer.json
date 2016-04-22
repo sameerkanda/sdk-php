@@ -19,10 +19,12 @@
   },
   "scripts": {
     "post-install-cmd": [
-      "RG\\Composer\\ScriptHandler::createFolders"
+      "RG\\Composer\\ScriptHandler::createFolders",
+      "RG\\Composer\\ScriptHandler::setupConfig"
     ],
     "post-update-cmd": [
-      "RG\\Composer\\ScriptHandler::createFolders"
+      "RG\\Composer\\ScriptHandler::createFolders",
+      "RG\\Composer\\ScriptHandler::setupConfig"
     ]
   }
 }
