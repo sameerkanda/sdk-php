@@ -69,7 +69,8 @@ class AuthCommand extends ConsoleCommand
      */
     protected function buildConnector()
     {
-        $connector = $this->connectorService->buildConnector($this->input['connectorName']);
+        $connector = $this->connectorService
+            ->buildConnector($this->input['connectorName']);
 
         return $connector;
     }

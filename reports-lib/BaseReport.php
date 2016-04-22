@@ -12,13 +12,12 @@ namespace RAM;
 use Doctrine\Common\Collections\ArrayCollection;
 use RAM\Exception\ConnectorNotFoundException;
 use RAM\Interfaces\ConnectorInterface;
+use RAM\Interfaces\EventDispatcherInterface;
 use RAM\Interfaces\ReportInterface;
 use RAM\Interfaces\StorageInterface;
 use RAM\Services\Logger;
 use RAM\Services\Sentiment;
 use RAM\Services\SpellingService;
-use RG\RenderEngine\RenderEngine;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use RG\Event\FilterReportEvent;
 use RG\Event\ReportEvents;
 

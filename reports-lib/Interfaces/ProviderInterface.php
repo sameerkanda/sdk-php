@@ -5,7 +5,6 @@
  */
 
 namespace RAM\Interfaces;
-use GuzzleHttp\ClientInterface;
 
 /**
  * Description of ProviderInterface

@@ -66,7 +66,7 @@ class RemoteConnector implements ConnectorInterface
         ];
         
         $options = array_merge($options, $this->credentials);
-        $response = $this->service->request($this->provider, $path, $options);
+        $response = $this->service->request($this->provider, 'get', $options);
         
         $this->setLastHeaders($response->headers);
 
@@ -98,7 +98,7 @@ class RemoteConnector implements ConnectorInterface
         ];
 
         $options = array_merge($options, $this->credentials);
-        $response = $this->service->request($this->provider, $path, $options);
+        $response = $this->service->request($this->provider, 'get', $options);
         
         $this->setLastHeaders($response->headers);
 

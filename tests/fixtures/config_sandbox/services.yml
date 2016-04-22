@@ -1,24 +1,26 @@
 services:
-    browser:
-        class: RG\Browser
-        arguments: ["@buzz.client", "@buzz.message_factory"]
     connector_service:
         class: RG\ConnectorService
-        arguments: [%connectors%, @browser, @proxy_service, %connection%, %responses%]
+        arguments: ["%connectors%", "@api", "@proxy_service", "%connection%", "%responses%"]
     report_service:
         class: RG\ReportService
-        arguments: [@service_container]
+        arguments: ["@service_container"]
     event_dispatcher:
-        class: Symfony\Component\EventDispatcher\ContainerAwareEventDispatcher
-        arguments: [@service_container]
+        class: RAM\EventDispatcher\EventDispatcher
+        arguments: ["@service_container"]
     report_templating_helper:
         class: RG\RenderEngine\ReportTemplatingHelper
-        arguments: [%report_assets%, %web_path%, https://rocketgraph.com/sw]
+        arguments: ["%report_assets%", "%web_path%", "https://rocketgraph.com/sw"]
     storage_service:
         class: RAM\Services\Storage
-        arguments: [%storage_path%]
+        arguments: ["%storage_path%"]
     proxy_service:
         class: RG\Proxy
-        arguments: [%proxy_path%]
+        arguments: ["%proxy_path%"]
     logger:
         class: RAM\Services\Logger
+    http_client:
+        class: GuzzleHttp\Client
+    api:
+        class: RG\Api
+        arguments: ["@http_client", "%connectors_api%"]

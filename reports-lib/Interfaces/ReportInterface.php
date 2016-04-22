@@ -6,8 +6,6 @@
  */
 namespace RAM\Interfaces;
 
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-
 /**
  * @author K.Christofilos <kostas.christofilos@rocketgraph.com>
  */

@@ -34,7 +34,7 @@ class BaseReportTest extends \PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $dispatcher = $this->getMockBuilder('Symfony\Component\EventDispatcher\EventDispatcherInterface')
+        $dispatcher = $this->getMockBuilder('RAM\Interfaces\EventDispatcherInterface')
             ->disableOriginalConstructor()
             ->setMethods([
                 'dispatch',

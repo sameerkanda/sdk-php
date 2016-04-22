@@ -31,6 +31,7 @@ class Kernel
      */
     protected $container;
 
+    /** @var bool */
     protected $debug;
 
     /**
