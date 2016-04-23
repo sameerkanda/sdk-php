@@ -41,7 +41,11 @@ class Logger
                 $logs = array_splice($logs, 0, self::LOG_LIMIT-1);
                 $logs = array_reverse($logs, true);
             }
-            $logs[$date->format(DATE_ISO8601)] = $message;
+            
+            if (empty($logs[$date->format(DATE_ISO8601)]))
+                $logs[$date->format(DATE_ISO8601)] = $message;
+            else
+                $logs[$date->format(DATE_ISO8601)] .= "\n$message";
         }
 
         return $this->storage->save('logs', $logs);
