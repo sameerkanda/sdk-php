@@ -40,4 +40,11 @@ interface StorageInterface
      * @return mixed
      */
     public function delete($key);
+    
+    /**
+     * Clear the entire storage
+     *
+     * @return mixed
+     */
+    public function clear();
 }
